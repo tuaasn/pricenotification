@@ -1,0 +1,85 @@
+﻿<Window x:Class="PriceNotification.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:PriceNotification"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        Title="PriceNotification"
+        Width="720"
+        Height="480"
+        Loaded="Window_Loaded"
+        ResizeMode="NoResize"
+        mc:Ignorable="d">
+    <Grid x:Name="rootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+            <Label VerticalAlignment="Center" Content="Symbol" />
+            <TextBox x:Name="searchText"
+                     Width="100"
+                     Height="30"
+                     VerticalContentAlignment="Center"
+                     TextChanged="SearchChanged" />
+
+            <Popup x:Name="autoListPopup"
+                   Height="100"
+                   Placement="Bottom"
+                   StaysOpen="False"
+                   Visibility="Collapsed">
+                <ListBox x:Name="autoList"
+                         Width="500"
+                         Height="100"
+                         SelectionChanged="AutoList_SelectionChanged"
+                         Visibility="Collapsed" />
+            </Popup>
+            <Label VerticalAlignment="Center" Content="TimeFrame" />
+            <ComboBox Name="timeFrame"
+                      Width="100"
+                      Height="30"
+                      Margin="5"
+                      VerticalContentAlignment="Center"
+                      VerticalAlignment="Center" />
+            <Label VerticalAlignment="Center" Content="Percent" />
+            <TextBox x:Name="percentText"
+                     Width="100"
+                     Height="30"
+                     VerticalContentAlignment="Center" />
+            <Button Margin="5"
+                    Click="AddNew_Clicked"
+                    Content="Add" />
+        </StackPanel>
+        <ListView Grid.Row="1" ItemsSource="{Binding SubPrices}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Width="150"
+                                    DisplayMemberBinding="{Binding Symbol}"
+                                    Header="Symbol" />
+                    <GridViewColumn Width="150"
+                                    DisplayMemberBinding="{Binding CandlestickString}"
+                                    Header="TimeFrame" />
+                    <GridViewColumn Width="150" Header="Percent">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Width="50" Text="{Binding Percent, UpdateSourceTrigger=LostFocus}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Width="150" Header="Percent">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.StopSubCommand, Source={x:Reference rootGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Content="StopSub" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</Window>

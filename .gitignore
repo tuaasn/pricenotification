@@ -1,0 +1,8 @@
+/.vs
+/Binance/bin
+/Binance/obj
+/PriceNotification/PriceNotification.csproj.user
+/PriceNotification/bin
+/PriceNotification/obj
+/TelegramBot/obj
+/TelegramBot/bin
