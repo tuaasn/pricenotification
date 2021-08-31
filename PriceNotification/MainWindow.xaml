@@ -65,7 +65,7 @@
                     <GridViewColumn Width="150" Header="Percent">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Width="50" Text="{Binding Percent, UpdateSourceTrigger=LostFocus}" />
+                                <TextBox Width="50" Text="{Binding Percent, UpdateSourceTrigger=LostFocus}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

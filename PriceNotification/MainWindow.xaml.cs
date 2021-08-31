@@ -32,7 +32,6 @@ namespace PriceNotification
         private Dictionary<string, Dictionary<CandlestickInterval, DateTime>> TimeCallPriceCaches = new Dictionary<string, Dictionary<CandlestickInterval, DateTime>>();
         private List<string> timeFrames = new List<string>() { "1m", "3m", "5m", "15m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M" };
 
-        private List<SubPrice> subPrices = new List<SubPrice>();
         public MainWindow()
         {
             var configuration = new ConfigurationBuilder()
@@ -57,10 +56,14 @@ namespace PriceNotification
             if (subcribe != null)
             {
                 Dispatcher.Invoke(() => { SubPrices.Remove(subcribe); });
+                subcribe.PropertyChanged -= SubPrice_PropertyChanged;
                 var client = candlestickPriceCaches[subcribe.Symbol][subcribe.Candlestick];
                 client.Unsubscribe();
                 var task = retryTaskPriceControllers[subcribe.Symbol][subcribe.Candlestick];
                 task.CancelAsync().Wait();
+                TimeCallPriceCaches[subcribe.Symbol][subcribe.Candlestick] = DateTime.MinValue;
+                if (candlestickPriceCaches[subcribe.Symbol].ContainsKey(subcribe.Candlestick))
+                    candlestickPriceCaches[subcribe.Symbol].Remove(subcribe.Candlestick);
             }
         }
 
@@ -174,10 +177,22 @@ namespace PriceNotification
             if (string.IsNullOrEmpty(selectedText)) return;
             subPrice.CandlestickString = selectedText;
             subPrice.Percent = percentText.Text;
-            if (subPrices.Any(s => s.Symbol == subPrice.Symbol && s.Candlestick == subPrice.Candlestick)) return;
-            subPrices.Add(subPrice);
+            if (SubPrices.Any(s => s.Symbol == subPrice.Symbol && s.Candlestick == subPrice.Candlestick)) return;
             SubPrices.Add(subPrice);
             SubPrice(subPrice);
+            subPrice.PropertyChanged += SubPrice_PropertyChanged;
+        }
+
+        private void SubPrice_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "Percent")
+            {
+                SubPrice subprice = sender as SubPrice;
+                if (TimeCallPriceCaches.ContainsKey(subprice.Symbol) && TimeCallPriceCaches[subprice.Symbol].ContainsKey(subprice.Candlestick))
+                {
+                    TimeCallPriceCaches[subprice.Symbol][subprice.Candlestick] = DateTime.MinValue;
+                }
+            }
         }
 
         private void SubPrice(SubPrice subPrice)
@@ -209,7 +224,8 @@ namespace PriceNotification
 
                 if (retryTaskPriceControllers.ContainsKey(subPrice.Symbol))
                 {
-                    retryTaskPriceControllers[subPrice.Symbol].Add(subPrice.Candlestick, controller);
+                    if (retryTaskPriceControllers[subPrice.Symbol].ContainsKey(subPrice.Candlestick)) retryTaskPriceControllers[subPrice.Symbol][subPrice.Candlestick] = controller;
+                    else retryTaskPriceControllers[subPrice.Symbol].Add(subPrice.Candlestick, controller);
                 }
                 else
                 {
@@ -229,7 +245,7 @@ namespace PriceNotification
             {
                 if (TimeCallPriceCaches[symbol][candlestickInterval] == lastCandle.OpenTime) return;
             }
-            var subPrice = subPrices.FirstOrDefault(a => a.Symbol == symbol && candlestickInterval == a.Candlestick);
+            var subPrice = SubPrices.FirstOrDefault(a => a.Symbol == symbol && candlestickInterval == a.Candlestick);
             if (subPrice != null)
             {
                 string message = string.Empty;
@@ -266,7 +282,7 @@ namespace PriceNotification
 
     public class SubPrice : NotifyChanged
     {
-        private int percent = 7;
+        private decimal percent = 7.1m;
         private string candlestickString;
         public Guid Id { get; set; } = new Guid();
         public string Symbol { get; set; }
@@ -285,11 +301,11 @@ namespace PriceNotification
         {
             get => percent.ToString(); set
             {
-                int.TryParse(value, out percent);
+                decimal.TryParse(value, out percent);
                 OnPropertyChanged("Percent");
             }
         }
-        public int PercentRoot
+        public decimal PercentRoot
         {
             get { return percent; }
             set
