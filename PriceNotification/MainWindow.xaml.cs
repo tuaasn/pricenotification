@@ -225,7 +225,7 @@ namespace PriceNotification
             string symbol = args.Symbol;
             CandlestickInterval candlestickInterval = args.CandlestickInterval;
             var lastCandle = args.Candlesticks.LastOrDefault();
-            if (TimeCallPriceCaches.ContainsKey(symbol))
+            if (TimeCallPriceCaches.ContainsKey(symbol) && TimeCallPriceCaches[symbol].ContainsKey(candlestickInterval))
             {
                 if (TimeCallPriceCaches[symbol][candlestickInterval] == lastCandle.OpenTime) return;
             }
@@ -243,10 +243,15 @@ namespace PriceNotification
                 }
                 if (!string.IsNullOrEmpty(message))
                 {
-                    telegramBot.SendMessage(message, botChannel).ConfigureAwait(false);
+                    //telegramBot.SendMessage(message, botChannel).ConfigureAwait(false);
                     if (TimeCallPriceCaches.ContainsKey(symbol))
                     {
-                        TimeCallPriceCaches[symbol][candlestickInterval] = lastCandle.OpenTime;
+                        if (TimeCallPriceCaches[symbol].ContainsKey(candlestickInterval))
+                            TimeCallPriceCaches[symbol][candlestickInterval] = lastCandle.OpenTime;
+                        else
+                        {
+                            TimeCallPriceCaches[symbol].Add(candlestickInterval, lastCandle.OpenTime);
+                        }
                     }
                     else
                     {
