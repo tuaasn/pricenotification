@@ -243,7 +243,7 @@ namespace PriceNotification
                 }
                 if (!string.IsNullOrEmpty(message))
                 {
-                    //telegramBot.SendMessage(message, botChannel).ConfigureAwait(false);
+                    telegramBot.SendMessage(message, botChannel).ConfigureAwait(false);
                     if (TimeCallPriceCaches.ContainsKey(symbol))
                     {
                         if (TimeCallPriceCaches[symbol].ContainsKey(candlestickInterval))
